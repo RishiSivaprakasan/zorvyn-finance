@@ -15,7 +15,21 @@ export const createApp = () => {
   app.set('etag', false);
 
   app.use(helmet());
-  app.use(cors());
+  const configuredOrigins = env.CORS_ORIGINS
+    ? env.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean)
+    : null;
+
+  app.use(
+    cors({
+      origin: (origin, cb) => {
+        if (!configuredOrigins || configuredOrigins.length === 0) return cb(null, true);
+        if (!origin) return cb(null, true);
+        return cb(null, configuredOrigins.includes(origin));
+      },
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    })
+  );
   app.use(express.json({ limit: '1mb' }));
   app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 

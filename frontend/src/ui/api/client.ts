@@ -8,9 +8,8 @@ export type ApiErrorShape = {
   message?: string;
 };
 
-const baseUrl =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  'http://localhost:5000';
+const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:4000';
+const baseUrl = rawBaseUrl.replace(/\/+$/, '');
 
 async function readError(res: Response): Promise<string> {
   try {
@@ -29,8 +28,8 @@ export async function apiFetch<T>(
   path: string,
   init?: RequestInit
 ): Promise<T> {
-  // ✅ FIX: read correct token from localStorage
-  const token = localStorage.getItem("finance_dashboard_token");
+  // ✅ FIX: read correct token from authStore
+  const token = authStore.getToken();
 
   const headers = new Headers(init?.headers);
   headers.set('Accept', 'application/json');
@@ -46,6 +45,10 @@ export async function apiFetch<T>(
     ...init,
     headers,
   });
+
+  if (res.status === 401) {
+    authStore.clear();
+  }
 
   if (!res.ok) {
     const msg = await readError(res);
