@@ -15,8 +15,9 @@ export const createApp = () => {
   app.set('etag', false);
 
   app.use(helmet());
+  const normalizeOrigin = (value: string) => value.trim().replace(/\/+$/, '');
   const configuredOrigins = env.CORS_ORIGINS
-    ? env.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean)
+    ? env.CORS_ORIGINS.split(',').map(normalizeOrigin).filter(Boolean)
     : null;
 
   app.use(
@@ -24,7 +25,9 @@ export const createApp = () => {
       origin: (origin, cb) => {
         if (!configuredOrigins || configuredOrigins.length === 0) return cb(null, true);
         if (!origin) return cb(null, true);
-        return cb(null, configuredOrigins.includes(origin));
+
+        const normalized = normalizeOrigin(origin);
+        return cb(null, configuredOrigins.includes(normalized));
       },
       allowedHeaders: ['Content-Type', 'Authorization'],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
