@@ -23,6 +23,8 @@ export const errorHandler = (err: unknown, _req: Request, res: Response, _next: 
     });
   }
 
+  console.error(err);
+
   const fallback = new AppError('Internal server error');
   return res.status(500).json({
     error: {
